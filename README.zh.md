@@ -1,4 +1,6 @@
-# bypass-codex-site-safety
+# codex-browser-site-safety-win
+
+[bypass-codex-site-safety](https://github.com/leixyou/bypass-codex-site-safety) 的 Windows fork。
 
 [English](README.md) · [中文](README.zh.md) · [Windows 指南](README.windows.md) · [Computer Use](README.computer-use.md)
 
