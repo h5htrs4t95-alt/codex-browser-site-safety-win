@@ -93,6 +93,14 @@ NAV_BLOCK_GUARD = (
     'if((typeof process<"u"?process.env.BROWSER_USE_SECURITY_MODE:"")'
     '==="disabled-for-local-testing")return;'
 )
+# Windows spawns some node_repl processes through plugin helpers (node.exe),
+# which never inherit the env from [mcp_servers.node_repl.env]. Make the
+# security-mode resolver fall back to local-testing instead of "" so those
+# processes bypass site_status too.
+FT_DEFAULT_RE = re.compile(
+    r"(function \w+\(\w+\)\{let \w+=Nt\(\w+,\w+\);return \w+\.find\(r=>r===\w+\)\?\?)\w+\}"
+)
+FT_DEFAULT_VALUE = "disabled-for-local-testing"
 
 
 # --------------------------------------------------------------------------
@@ -220,12 +228,35 @@ def official_node_repl() -> Path | None:
     return None
 
 
+def runtime_browser_service_files() -> list[Path]:
+    """Copies shipped inside the cua_node runtime, loaded by plugin helpers.
+
+    Codex desktop on Windows can load the browser service from these paths
+    instead of the plugin cache, so they need the same patches.
+    """
+    files: list[Path] = []
+    root = windows_cua_root()
+    if root.exists():
+        rels = (
+            Path("@oai") / "browser-desktop" / "scripts" / "browser-service.mjs",
+            Path("@oai") / "cua" / "dist" / "lib" / "js" / "oai_js_browser"
+            / "dist" / "skill" / "scripts" / "browser-service.mjs",
+        )
+        for base in sorted(root.glob("*/bin/node_modules")):
+            for rel in rels:
+                path = base / rel
+                if path.is_file():
+                    files.append(path)
+    return files
+
+
 def browser_service_files() -> list[Path]:
     files: list[Path] = []
     for name in ("chrome", "browser"):
         root = plugin_cache() / name
         if root.exists():
             files.extend(sorted(root.glob("*/scripts/browser-service.mjs")))
+    files.extend(runtime_browser_service_files())
     return files
 
 
@@ -526,28 +557,41 @@ def patch_cua_mcp(*, dry: bool, quiet: bool) -> int:
 
 
 def patch_navigation_blocked(*, dry: bool, quiet: bool) -> int:
-    """Ignore Chrome Page.navigationBlocked under local-testing mode.
+    """Ignore Chrome Page.navigationBlocked and default to local-testing mode.
 
     site_status is skipped by the env flag, but in-page actions can still
     throw browser_navigation_blocked ("not permitted on <url>") when CDP
-    emits Page.navigationBlocked.
+    emits Page.navigationBlocked.  Windows also spawns some node_repl
+    processes through plugin helpers that never inherit the env flag, so the
+    security-mode resolver is changed to treat "unset" as local-testing.
     """
     changed = 0
     for path in browser_service_files():
         text = path.read_text(errors="replace")
-        if NAV_BLOCK_GUARD in text:
-            continue
-        new, n = NAV_BLOCK_RE.subn(r"\1" + NAV_BLOCK_GUARD + r"\2", text, count=1)
-        if n == 0:
-            log(f"no Page.navigationBlocked hook in {path} (skip)", quiet=quiet)
+        new = text
+        touched = False
+        if NAV_BLOCK_GUARD not in new:
+            sub, n = NAV_BLOCK_RE.subn(r"\1" + NAV_BLOCK_GUARD + r"\2", new, count=1)
+            if n:
+                new = sub
+                touched = True
+            else:
+                log(f"no Page.navigationBlocked hook in {path} (skip)", quiet=quiet)
+        sub, n = FT_DEFAULT_RE.subn(r'\1"' + FT_DEFAULT_VALUE + '"}', new, count=1)
+        if n:
+            new = sub
+            touched = True
+        else:
+            log(f"no security-mode default hook in {path} (skip)", quiet=quiet)
+        if not touched:
             continue
         if dry:
-            log(f"would patch navigationBlocked: {path}", quiet=quiet)
+            log(f"would patch browser service: {path}", quiet=quiet)
             changed += 1
             continue
         backup(path)
         write_text(path, new)
-        log(f"patched navigationBlocked: {path}", quiet=quiet, important=True)
+        log(f"patched browser service: {path}", quiet=quiet, important=True)
         changed += 1
     return changed
 

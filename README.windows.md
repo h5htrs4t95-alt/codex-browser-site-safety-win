@@ -6,6 +6,40 @@ so the cloud `aura/site_status` ("site-safety policy") check is skipped for ever
 `http://` / `https://` site. The same install also patches the local plugin cache so
 `Page.navigationBlocked` is ignored while that flag is on.
 
+## Fork additions: runtime browser-service copies
+
+> 中文摘要：Windows 上只改 `[mcp_servers.node_repl.env]` 不够——插件服务
+> （`node.exe ./server.mjs`、`cua-repl.mjs`）启动的 `node_repl` 不继承该环境变量，
+> 会加载运行时目录里的 `browser-service.mjs`。本 fork 额外把这些副本里的安全模式
+> 解析函数默认值改为 `disabled-for-local-testing`，watcher 会在 Codex 升级后自动重打。
+> 安装用 `.\install.ps1 install --persist`，然后完全退出 Codex 并新开会话。
+
+The upstream Windows port only patched the **plugin cache**. On Codex Desktop
+26.1013.x some `node_repl` processes are spawned by plugin helpers
+(`node.exe ./server.mjs`, `cua-repl.mjs`) and never inherit
+`[mcp_servers.node_repl.env]`; those processes load the browser service from the
+**cua_node runtime** instead, so the env flag never reaches the site-status gate.
+
+This fork additionally patches the security-mode resolver in every copy it can
+find, so an unset environment is treated as local-testing mode:
+
+```text
+function <resolver>(t){let e=Nt(t,<VAR>);return <list>.find(r=>r===e)??<default>}
+                                                              ^^^^^^^^^
+                     becomes ??\"disabled-for-local-testing\"
+```
+
+Files covered:
+
+- `~/.codex/plugins/cache/openai-bundled/{browser,chrome}/*/scripts/browser-service.mjs`
+- `%LOCALAPPDATA%\OpenAI\Codex\runtimes\cua_node\<hash>\bin\node_modules\@oai\browser-desktop\scripts\browser-service.mjs`
+- `%LOCALAPPDATA%\OpenAI\Codex\runtimes\cua_node\<hash>\bin\node_modules\@oai\cua\dist\lib\js\oai_js_browser\dist\skill\scripts\browser-service.mjs`
+
+The watcher (`--persist`) and the `CodexBrowserLabRepair` task re-apply the
+patch after Codex rewrites its config or replaces the runtime. Every rewritten
+file is backed up to `~/.codex/mcp-wrappers/backups/`; runtime copies also keep
+a `browser-service.mjs.bak-ftmode-<timestamp>` next to the original.
+
 ## Requirements
 
 | Component | Needed |
@@ -116,6 +150,7 @@ environment — that is exactly what `status` reports as `mode=<unset>`.
 | `~/.codex/browser/config.toml` | optional `allowed` arrays |
 | `~/.codex/plugins/cache/openai-bundled/unified-computer-use/*/.mcp.json` | CUA env flag |
 | `~/.codex/plugins/cache/.../{chrome,browser}/*/scripts/browser-service.mjs` | ignore CDP `Page.navigationBlocked` while the flag is on |
+| `%LOCALAPPDATA%\OpenAI\Codex\runtimes\cua_node\*/bin/node_modules\@oai\.../browser-service.mjs` | security-mode default (covers `node_repl` spawned by plugin helpers) |
 | `~/.codex/mcp-wrappers/` | installed tool copy, `repair` shim, watcher log, `backups/` of every file touched |
 | `HKCU\...\CurrentVersion\Run\CodexBrowserLabWatch` | autostarts the watcher |
 | Scheduled Task `CodexBrowserLabRepair` | periodic repair |
@@ -169,6 +204,11 @@ and the `.cmd` shim, and strips `BROWSER_USE_SECURITY_MODE` from `config.toml` a
 the CUA `.mcp.json`. Origin allowlists are left in place unless you delete them
 from `config.toml` yourself.
 
+It does **not** restore `browser-service.mjs`. To undo those edits, copy the
+files back from `~/.codex/mcp-wrappers/backups/`, or use the
+`browser-service.mjs.bak-ftmode-<timestamp>` copies stored next to the runtime
+files.
+
 ## Limits
 
 - **New thread required:** the patch only reaches `node_repl` processes spawned
@@ -180,8 +220,10 @@ from `config.toml` yourself.
 - **Updates:** a Codex/ChatGPT update regenerates `config.toml`. The watcher covers
   this as long as it is running; without `--persist`, re-run `.\install.ps1`.
   Version-dependent paths are followed automatically: the plugin version directory
-  (`unified-computer-use/*/`, `browser/*/`) is globbed and `node_repl` is resolved
-  from the `command` Codex itself writes, so a new runtime hash needs no action.
+  (`unified-computer-use/*/`, `browser/*/`), the runtime hash directory
+  (`runtimes/cua_node/*/`) and the `@oai/...` copies are all globbed, and
+  `node_repl` is resolved from the `command` Codex itself writes, so a new
+  runtime hash needs no action.
   The one thing an update *can* take away is the flag itself — `status` reports
   `flag support`, and the watcher writes a `WARNING` line to its log if a new
   `browser-service.mjs` no longer implements `disabled-for-local-testing`.
@@ -194,6 +236,15 @@ from `config.toml` yourself.
   `raw-cdp-destination-url`. The browser agent becomes more autonomous inside your
   own browser profile. Uninstall to restore the prompts.
 
+## Disclaimer
+
+Unofficial; not affiliated with OpenAI. `disabled-for-local-testing` bypasses
+more than the site-status check: it also removes user-consent prompts for
+browser-history reads, origin access, file downloads/uploads, full CDP and page
+assets, so the agent becomes more autonomous inside your logged-in browser
+profile. Use a dedicated browser profile, review the vendor's terms, and use at
+your own risk.
+
 ## License
 
-MIT (same as upstream).
+MIT (same as upstream). See [LICENSE](LICENSE).
