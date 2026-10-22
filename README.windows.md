@@ -1,4 +1,6 @@
-# Windows guide — bypass-codex-site-safety
+# Windows guide — codex-browser-site-safety-win
+
+[English](README.windows.md) · [中文](README.windows.zh.md)
 
 Windows port of [bypass-codex-site-safety](README.md). It turns on Codex / ChatGPT
 Desktop **Browser Use local-testing mode** (`BROWSER_USE_SECURITY_MODE=disabled-for-local-testing`),
@@ -8,11 +10,7 @@ so the cloud `aura/site_status` ("site-safety policy") check is skipped for ever
 
 ## Fork additions: runtime browser-service copies
 
-> 中文摘要：Windows 上只改 `[mcp_servers.node_repl.env]` 不够——插件服务
-> （`node.exe ./server.mjs`、`cua-repl.mjs`）启动的 `node_repl` 不继承该环境变量，
-> 会加载运行时目录里的 `browser-service.mjs`。本 fork 额外把这些副本里的安全模式
-> 解析函数默认值改为 `disabled-for-local-testing`，watcher 会在 Codex 升级后自动重打。
-> 安装用 `.\install.ps1 install --persist`，然后完全退出 Codex 并新开会话。
+> 中文读者：完整中文版见 [README.windows.zh.md](README.windows.zh.md)。
 
 The upstream Windows port only patched the **plugin cache**. On Codex Desktop
 26.1013.x some `node_repl` processes are spawned by plugin helpers

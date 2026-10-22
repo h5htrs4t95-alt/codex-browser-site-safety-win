@@ -2,9 +2,9 @@
 
 [bypass-codex-site-safety](https://github.com/leixyou/bypass-codex-site-safety) 的 Windows fork。
 
-[English](README.md) · [中文](README.zh.md) · [Windows 指南](README.windows.md) · [Computer Use](README.computer-use.md)
+[English](README.md) · [中文](README.zh.md) · [Windows 指南](README.windows.md) · [Windows 中文](README.windows.zh.md) · [Computer Use](README.computer-use.md)
 
-> **Windows fork 额外补丁。** 上游的 Windows 版只改了插件缓存。Codex Desktop `26.1013.x` 上，有一部分 `node_repl` 由插件服务（`node.exe ./server.mjs`、`cua-repl.mjs`）拉起，**不继承** `[mcp_servers.node_repl.env]`；它们加载的是 `cua_node` 运行时里的 `browser-service.mjs`，环境变量到不了 site-status 闸门。本 fork 把这些运行时副本也一起改了。详见 [README.windows.md → Fork additions](README.windows.md#fork-additions-runtime-browser-service-copies)。
+> **Windows fork 额外补丁。** 上游的 Windows 版只改了插件缓存。Codex Desktop `26.1013.x` 上，有一部分 `node_repl` 由插件服务（`node.exe ./server.mjs`、`cua-repl.mjs`）拉起，**不继承** `[mcp_servers.node_repl.env]`；它们加载的是 `cua_node` 运行时里的 `browser-service.mjs`，环境变量到不了 site-status 闸门。本 fork 把这些运行时副本也一起改了。完整说明见 [中文 Windows 指南](README.windows.zh.md)。
 >
 > 实测环境：Codex Desktop `26.1013.4894.0`（Windows 11），runtime `78fb63cda1a9e2b2`，plugin `26.1013.40934`。
 
@@ -20,11 +20,11 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
 
 Windows 指南按"参考资料"来写：
 
-- [版本兼容矩阵](README.windows.md#compatibility-matrix) — 实测过的版本、怎么读 `status`
-- [报错对照表](README.windows.md#error-map) — 每条底层原因的归属，以及本工具是否覆盖
-- [自动修复机制](README.windows.md#how-auto-repair-works) — 三层补丁和触发条件
-- [排查是哪一层失效](README.windows.md#diagnose-which-layer-failed)
-- [升级操作手册](README.windows.md#upgrade-playbook-codex-update)
+- [版本兼容矩阵](README.windows.zh.md#版本兼容矩阵) — 实测过的版本、怎么读 `status`
+- [报错对照表](README.windows.zh.md#报错对照表) — 每条底层原因的归属，以及本工具是否覆盖
+- [自动修复机制](README.windows.zh.md#自动修复机制) — 三层补丁和触发条件
+- [排查是哪一层失效](README.windows.zh.md#排查是哪一层失效)
+- [升级操作手册](README.windows.zh.md#升级操作手册codex-升级后)
 
 在本机绕过 Codex / ChatGPT Desktop 的 **站点安全 / URL 策略**。拦法有两套，破解方式也不同：
 
