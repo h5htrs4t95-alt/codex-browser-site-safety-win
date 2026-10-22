@@ -159,6 +159,19 @@ environment — that is exactly what `status` reports as `mode=<unset>`.
 derived from the path relative to `CODEX_HOME`, so `config.toml` and
 `browser/config.toml` never overwrite each other's backup.
 
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `site_status_blocked` — “The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted” | the thread's `node_repl` was spawned before the patch, or a runtime copy was missed | `.\install.ps1 status`; fully restart Codex; open a **new** thread |
+| `browser_navigation_blocked` — “Browser Use is not permitted on …” | CDP `Page.navigationBlocked` reached a copy without the guard | re-run `.\install.ps1 install --persist` |
+| `status` prints `flag support … no longer implements` | the Codex build removed the flag | do not patch blindly; file an issue with the Codex version |
+| After a reboot Codex shows a sign-in screen and an English UI | a system proxy (`127.0.0.1:<port>`) is not running, so token refresh times out | start the proxy client; this is not caused by the patch |
+
+Chinese users: the model may paraphrase the same error as
+「浏览器安全策略阻止读取 …」; the underlying reason is still
+`site_status_blocked`.
+
 ## Verify
 
 ```powershell

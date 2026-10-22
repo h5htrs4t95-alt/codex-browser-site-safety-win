@@ -2,6 +2,20 @@
 
 [English](README.md) · [中文](README.zh.md) · [Windows 指南](README.windows.md) · [Computer Use](README.computer-use.md)
 
+> **Windows fork 额外补丁。** 上游的 Windows 版只改了插件缓存。Codex Desktop `26.1013.x` 上，有一部分 `node_repl` 由插件服务（`node.exe ./server.mjs`、`cua-repl.mjs`）拉起，**不继承** `[mcp_servers.node_repl.env]`；它们加载的是 `cua_node` 运行时里的 `browser-service.mjs`，环境变量到不了 site-status 闸门。本 fork 把这些运行时副本也一起改了。详见 [README.windows.md → Fork additions](README.windows.md#fork-additions-runtime-browser-service-copies)。
+>
+> 实测环境：Codex Desktop `26.1013.4894.0`（Windows 11），runtime `78fb63cda1a9e2b2`，plugin `26.1013.40934`。
+
+### Windows 快速开始
+
+```powershell
+git clone https://github.com/h5htrs4t95-alt/codex-browser-site-safety-win.git
+cd codex-browser-site-safety-win
+powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
+```
+
+装完**完全退出 Codex（含托盘图标）再重开**，然后新开会话；老会话里已经拉起的 `node_repl` 仍是旧环境。
+
 在本机绕过 Codex / ChatGPT Desktop 的 **站点安全 / URL 策略**。拦法有两套，破解方式也不同：
 
 | 闸门 | 典型报错 | 本仓库怎么过 |
