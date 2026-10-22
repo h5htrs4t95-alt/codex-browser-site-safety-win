@@ -26,7 +26,7 @@ find, so an unset environment is treated as local-testing mode:
 ```text
 function <resolver>(t){let e=Nt(t,<VAR>);return <list>.find(r=>r===e)??<default>}
                                                               ^^^^^^^^^
-                     becomes ??\"disabled-for-local-testing\"
+                     becomes ??"disabled-for-local-testing"
 ```
 
 Files covered:
