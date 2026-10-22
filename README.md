@@ -19,6 +19,14 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
 Fully quit Codex (including the tray icon), reopen it, and use a **new thread**
 (old threads keep their already-spawned `node_repl`).
 
+The Windows guide is written as a reference:
+
+- [Compatibility matrix](README.windows.md#compatibility-matrix) — tested builds, how to read `status`
+- [Error map](README.windows.md#error-map) — every underlying reason, and whether this tool covers it
+- [How auto-repair works](README.windows.md#how-auto-repair-works) — the three layers and their triggers
+- [Diagnose which layer failed](README.windows.md#diagnose-which-layer-failed)
+- [Upgrade playbook](README.windows.md#upgrade-playbook-codex-update)
+
 Bypass Codex / ChatGPT Desktop **site-safety / URL policy** on your own machine. There are two separate gates:
 
 | Gate | Typical error | What this repo does |

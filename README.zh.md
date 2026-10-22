@@ -18,6 +18,14 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
 
 装完**完全退出 Codex（含托盘图标）再重开**，然后新开会话；老会话里已经拉起的 `node_repl` 仍是旧环境。
 
+Windows 指南按"参考资料"来写：
+
+- [版本兼容矩阵](README.windows.md#compatibility-matrix) — 实测过的版本、怎么读 `status`
+- [报错对照表](README.windows.md#error-map) — 每条底层原因的归属，以及本工具是否覆盖
+- [自动修复机制](README.windows.md#how-auto-repair-works) — 三层补丁和触发条件
+- [排查是哪一层失效](README.windows.md#diagnose-which-layer-failed)
+- [升级操作手册](README.windows.md#upgrade-playbook-codex-update)
+
 在本机绕过 Codex / ChatGPT Desktop 的 **站点安全 / URL 策略**。拦法有两套，破解方式也不同：
 
 | 闸门 | 典型报错 | 本仓库怎么过 |

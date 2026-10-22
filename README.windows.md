@@ -48,21 +48,49 @@ a `browser-service.mjs.bak-ftmode-<timestamp>` next to the original.
 | Codex / ChatGPT Desktop | installed and run once, so `%USERPROFILE%\.codex\config.toml` exists |
 | Python | 3.9+ (`python`, `python3` or the `py` launcher on PATH) |
 
-Verified on Codex Desktop `26.915.4065.0` / plugin `26.915.31945`.
+Verified on Codex Desktop `26.1013.4894.0` / plugin `26.1013.40934` (this fork) and
+`26.915.4065.0` / plugin `26.915.31945` (upstream).
+
+## Compatibility matrix
+
+Only the two builds below have been exercised end-to-end. Everything else is
+"run `status` first" — the installer refuses to pretend when a build no longer
+contains the flag.
+
+| Codex Desktop (package) | Plugin | cua_node runtime | Status | What it needs |
+|---|---|---|---|---|
+| `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | **Tested (this fork)** | env table + plugin cache + runtime resolver patch |
+| `26.915.4065.0` | `26.915.31945` | — | Tested by upstream | env table + plugin cache |
+| other `26.1013.x` builds | any | any | Expected; verify with `status` | runtime hash directory is globbed |
+| older / unknown | any | any | Unverified | run `status`; do not patch blindly |
+
+Get your own versions:
+
+```powershell
+(Get-AppxPackage OpenAI.Codex).Version
+Get-ChildItem "$env:USERPROFILE\.codex\plugins\cache\openai-bundled\browser" -Directory |
+    Select-Object -ExpandProperty Name
+Get-ChildItem "$env:LOCALAPPDATA\OpenAI\Codex\runtimes\cua_node" -Directory |
+    Select-Object -ExpandProperty Name
+```
+
+`status` is authoritative: `flag support ok` means the installed
+`browser-service.mjs` still ships both `check-url-site-status` and
+`disabled-for-local-testing`. If it prints `no longer implements`, stop — the
+mechanism changed and a blind patch will do nothing.
 
 ## Install
 
 ```powershell
-git clone https://github.com/leixyou/bypass-codex-site-safety.git
-cd bypass-codex-site-safety
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+git clone https://github.com/h5htrs4t95-alt/codex-browser-site-safety-win.git
+cd codex-browser-site-safety-win
+powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
 ```
 
-With no arguments that is exactly:
-
-```powershell
-python codex_browser_lab.py install --preset shopping-cn --persist
-```
+`install --persist` is the minimal install: it does not touch origin allowlists.
+With no arguments at all, `install.ps1` runs
+`install --preset shopping-cn --persist`, which additionally allowlists
+taobao / tmall / 1688 / alicdn / alipay.
 
 Then **start a new Codex thread** (see below for why).
 
@@ -86,8 +114,12 @@ system variables plus the `env` table plus the `env_vars` allowlist. Setting
 `BROWSER_USE_SECURITY_MODE` as a Windows user environment variable (`setx`,
 `HKCU\Environment`) therefore has **no effect** — it never reaches `node_repl`.
 
-So the only working channel is `[mcp_servers.node_repl.env]`, re-applied *after*
-each Codex launch. That is what `--persist` does on Windows:
+So for `node_repl` spawned directly by `codex.exe`, the only working channel is
+`[mcp_servers.node_repl.env]`, re-applied *after* each Codex launch.
+Processes spawned by plugin helpers never see that table — they are covered by
+the runtime resolver patch described in
+[Fork additions](#fork-additions-runtime-browser-service-copies) instead.
+That is what `--persist` does on Windows:
 
 | Mechanism | Trigger | Purpose |
 |---|---|
@@ -159,18 +191,117 @@ environment — that is exactly what `status` reports as `mode=<unset>`.
 derived from the path relative to `CODEX_HOME`, so `config.toml` and
 `browser/config.toml` never overwrite each other's backup.
 
-## Troubleshooting
+## Error map
 
-| Symptom | Cause | Fix |
+The model paraphrases tool errors. Match on the **underlying reason**, not on
+the model's wording.
+
+| Underlying reason / message | Gate | Covered on Windows? | What to do |
+|---|---|---|---|
+| `site_status_blocked` — “The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted.” | cloud `aura/site_status` check in `browser-service.mjs` | **Yes** — env flag + resolver default | restart Codex, open a **new** thread; `status` must show `config ok True` |
+| `site_status_unavailable` — “The site-safety check was unavailable.” | same gate, network/5xx | n/a | transient; retry and check your proxy |
+| `browser_navigation_blocked` — “Browser Use is not permitted on `<url>`.” | CDP `Page.navigationBlocked` | **Yes** — guard inserted into the service copies | re-run `.\install.ps1 install --persist`; new thread |
+| `navigation_url_policy_blocked` — “The browser URL policy blocks this action.” | local URL policy | Partly — the flag also bypasses `check-navigation-url-policy` | confirm the flag reached that process (see Diagnostics) |
+| `blockedURL` (`-10015`) / “Computer Use is not allowed on the current browser URL” | Computer Use native helper | **No** — macOS only | not covered; see `README.computer-use.md` |
+| `windows_runtime_framework_identity_unavailable … failureReason=no-package-identity` | app launched directly from `WindowsApps\...\app\ChatGPT.exe` | n/a | launch through the Start menu / `shell:AppsFolder\OpenAI.Codex_2p2nqsd0c76g0!App`, not the exe |
+| “no workarounds” refusal | model context, not a tool error | n/a | that thread already saw a denial; use a new thread |
+| After a reboot: sign-in screen + English UI | a system proxy (`127.0.0.1:<port>`) is not running, so token refresh times out | n/a | start the proxy client; not caused by the patch |
+
+Chinese UI: the same `site_status_blocked` is often paraphrased as
+「浏览器安全策略阻止读取 …」 or 「站点安全策略阻止了此操作」. The underlying
+reason is still `site_status_blocked`.
+
+## How auto-repair works
+
+Codex rewrites its managed config on every launch, and a Codex update replaces
+the plugin and runtime directories. The tool therefore watches three layers:
+
+| Layer | File | Re-applied when |
 |---|---|---|
-| `site_status_blocked` — “The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted” | the thread's `node_repl` was spawned before the patch, or a runtime copy was missed | `.\install.ps1 status`; fully restart Codex; open a **new** thread |
-| `browser_navigation_blocked` — “Browser Use is not permitted on …” | CDP `Page.navigationBlocked` reached a copy without the guard | re-run `.\install.ps1 install --persist` |
-| `status` prints `flag support … no longer implements` | the Codex build removed the flag | do not patch blindly; file an issue with the Codex version |
-| After a reboot Codex shows a sign-in screen and an English UI | a system proxy (`127.0.0.1:<port>`) is not running, so token refresh times out | start the proxy client; this is not caused by the patch |
+| 1. MCP env | `~/.codex/config.toml` → `[mcp_servers.node_repl.env]` | the key disappears |
+| 2. Plugin cache | `~/.codex/plugins/cache/openai-bundled/{browser,chrome}/*/scripts/browser-service.mjs` | the file fingerprint changes |
+| 3. Runtime copies | `%LOCALAPPDATA%\OpenAI\Codex\runtimes\cua_node\*\bin\node_modules\@oai\...\browser-service.mjs` | the file fingerprint changes |
 
-Chinese users: the model may paraphrase the same error as
-「浏览器安全策略阻止读取 …」; the underlying reason is still
-`site_status_blocked`.
+Triggers:
+
+- **watcher** — `HKCU\...\Run\CodexBrowserLabWatch`, polls every 2 s;
+- **scheduled task** — `CodexBrowserLabRepair`, every 5 min as a safety net;
+- both call the same idempotent `install --persist` path, so running them twice
+  is harmless.
+
+Sequence after a Codex launch or update:
+
+```text
+Codex starts / updates
+      │
+      ├─ rewrites config.toml and/or replaces the runtime directory
+      │
+      └─ within ~2 s the watcher detects the change and re-patches:
+         config env + plugin cache guard + runtime resolver default
+      │
+      └─ you open a NEW thread
+            └─ node_repl is spawned with the patched env / patched code
+```
+
+Log:
+
+```powershell
+Get-Content ~\.codex\mcp-wrappers\codex-browser-lab.log -Tail 20
+```
+
+What auto-repair **cannot** do:
+
+- change the environment of `node_repl` processes that are already running —
+  a new thread (or a full app restart) is required;
+- patch a future `browser-service.mjs` whose code shape changed — the watcher
+  logs `WARNING … no longer implements` instead of guessing;
+- cover Computer Use or the macOS binary patch.
+
+## Diagnose which layer failed
+
+1. **Config layer** — `.\install.ps1 status` must show
+   `config security disabled-for-local-testing` and `config ok True`.
+2. **Running processes** — every `live pid` line shows the environment that
+   process actually carries. `mode=<unset>` means it was spawned before the
+   patch; `mode=disabled-for-local-testing` is healthy.
+3. **Which spawn path owns a process** (config env vs runtime copy):
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node_repl.exe'" |
+  ForEach-Object {
+    $p = Get-CimInstance Win32_Process -Filter "ProcessId=$($_.ParentProcessId)"
+    [pscustomobject]@{ Pid = $_.ProcessId; Parent = $p.Name; Cmd = $p.CommandLine }
+  } | Format-Table -Wrap
+```
+
+   `Parent=codex.exe` → config env path. `Parent=node.exe`
+   (`server.mjs` / `cua-repl.mjs`) → runtime copy path.
+
+4. **Resolver actually present in each copy**:
+
+```powershell
+Select-String -Path `
+  "$env:USERPROFILE\.codex\plugins\cache\openai-bundled\browser\*\scripts\browser-service.mjs", `
+  "$env:LOCALAPPDATA\OpenAI\Codex\runtimes\cua_node\*\bin\node_modules\@oai\browser-desktop\scripts\browser-service.mjs", `
+  "$env:LOCALAPPDATA\OpenAI\Codex\runtimes\cua_node\*\bin\node_modules\@oai\cua\dist\lib\js\oai_js_browser\dist\skill\scripts\browser-service.mjs" `
+  -Pattern 'disabled-for-local-testing"' | Select-Object Path
+```
+
+   Every existing copy should be listed. If one is missing, re-run
+   `.\install.ps1 install --persist`.
+
+## Upgrade playbook (Codex update)
+
+1. Fully quit Codex (tray icon too).
+2. `.\install.ps1 status` — note the new plugin / runtime version.
+3. `.\install.ps1 install --persist`.
+4. Start Codex and use a **new** thread.
+5. `.\install.ps1 status` — expect `flag support ok`, `config ok True`, and after
+   the first browser action a live PID with
+   `mode=disabled-for-local-testing`.
+
+If step 3 reports `flag support … no longer implements`, stop and open an issue
+with the versions from the compatibility matrix.
 
 ## Verify
 
@@ -183,7 +314,7 @@ Healthy output:
 ```text
 platform            win32
 CODEX_HOME          C:\Users\<you>\.codex
-flag support        ok      (browser-service.mjs 26.915.31945 implements it)
+flag support        ok      (browser-service.mjs 26.1013.40934 implements it)
 official node_repl  ...\runtimes\cua_node\<hash>\bin\node_repl.exe
 watcher             running=True autostart=True
 persist             CodexBrowserLabRepair=installed
@@ -193,6 +324,9 @@ config security     disabled-for-local-testing
 config ok           True
 live pid=1234       mode=disabled-for-local-testing      <- after opening a NEW thread
 ```
+
+`flag support` may name `browser-desktop` instead of a plugin version when the
+runtime copy is the newest file; either is healthy as long as it says `ok`.
 
 Exit codes: `0` active, `2` config not patched, `3` config patched but the running
 processes still carry the old environment (start a new Codex thread).
