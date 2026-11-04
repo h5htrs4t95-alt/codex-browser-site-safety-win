@@ -34,7 +34,7 @@ watcher（`--persist`）和 `CodexBrowserLabRepair` 计划任务会在 Codex 重
 | Codex / ChatGPT Desktop | 已安装并至少启动过一次，确保 `%USERPROFILE%\.codex\config.toml` 存在 |
 | Python | 3.9+（`python`、`python3` 或 `py` 启动器在 PATH 中） |
 
-实测版本：Codex Desktop `26.1013.4894.0` / plugin `26.1013.40934`（本 fork），以及 `26.915.4065.0` / plugin `26.915.31945`（上游）。
+实测版本：Codex Desktop `26.1029.7803.0` / plugin `26.1029.61003`（本 fork，2026-11-04）、`26.1013.4894.0` / plugin `26.1013.40934`（本 fork，2026-10-21），以及 `26.915.4065.0` / plugin `26.915.31945`（上游）。
 
 ## 版本兼容矩阵
 
@@ -42,7 +42,8 @@ watcher（`--persist`）和 `CodexBrowserLabRepair` 计划任务会在 Codex 重
 
 | Codex Desktop（包版本） | Plugin | cua_node runtime | 状态 | 需要什么 |
 |---|---|---|---|---|
-| `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | **本 fork 实测** | env 表 + 插件缓存 + 运行时 resolver 补丁 |
+| `26.1029.7803.0` | `26.1029.61003` | `9c26d707817e90a7` | **本 fork 实测（2026-11-04）** | env 表 + 插件缓存 + 运行时 resolver 补丁 |
+| `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | 早期 fork 实测 | env 表 + 插件缓存 + 运行时 resolver 补丁 |
 | `26.915.4065.0` | `26.915.31945` | — | 上游实测 | env 表 + 插件缓存 |
 | 其他 `26.1013.x` | 任意 | 任意 | 预期可用，需 `status` 验证 | runtime hash 目录按通配匹配 |
 | 更旧 / 未知 | 任意 | 任意 | 未验证 | 先跑 `status`，不要盲改 |
@@ -156,6 +157,7 @@ Codex 桌面版在 Windows 上有两点和 macOS 不同，它们决定了整个�
 |---|---|---|---|
 | `site_status_blocked` — “The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted.” | `browser-service.mjs` 里对云端 `aura/site_status` 的检查 | **覆盖**——env 开关 + resolver 默认值 | 重启 Codex，开**新**会话；`status` 必须显示 `config ok True` |
 | `site_status_unavailable` — “The site-safety check was unavailable.” | 同一闸门，网络 / 5xx 失败 | 不适用 | 临时性问题；重试并检查代理 |
+| `upstream_error` — “The encrypted content for item `cmp_…` could not be verified. Reason: Encrypted content could not be decrypted or parsed.” | 模型 provider / 网关，**不是 Browser Use** | 不适用 | 该会话是在另一种鉴权上下文里创建的（例如 ChatGPT 登录 → API-key 网关）；开**新**会话 |
 | `browser_navigation_blocked` — “Browser Use is not permitted on `<url>`.” | CDP `Page.navigationBlocked` | **覆盖**——已在各副本里插入守卫 | 重跑 `.\install.ps1 install --persist`；新会话 |
 | `navigation_url_policy_blocked` — “The browser URL policy blocks this action.” | 本地 URL 策略 | 部分覆盖——开关也会跳过 `check-navigation-url-policy` | 确认该进程拿到了开关（见排查） |
 | `blockedURL`（`-10015`）/ “Computer Use is not allowed on the current browser URL” | Computer Use 原生 helper | **不覆盖**——仅 macOS | 本工具不管；见 `README.computer-use.md` |

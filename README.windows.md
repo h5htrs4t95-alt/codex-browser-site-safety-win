@@ -46,8 +46,9 @@ a `browser-service.mjs.bak-ftmode-<timestamp>` next to the original.
 | Codex / ChatGPT Desktop | installed and run once, so `%USERPROFILE%\.codex\config.toml` exists |
 | Python | 3.9+ (`python`, `python3` or the `py` launcher on PATH) |
 
-Verified on Codex Desktop `26.1013.4894.0` / plugin `26.1013.40934` (this fork) and
-`26.915.4065.0` / plugin `26.915.31945` (upstream).
+Verified on Codex Desktop `26.1029.7803.0` / plugin `26.1029.61003` (this fork,
+2026-11-04), `26.1013.4894.0` / plugin `26.1013.40934` (this fork, 2026-10-21)
+and `26.915.4065.0` / plugin `26.915.31945` (upstream).
 
 ## Compatibility matrix
 
@@ -57,7 +58,8 @@ contains the flag.
 
 | Codex Desktop (package) | Plugin | cua_node runtime | Status | What it needs |
 |---|---|---|---|---|
-| `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | **Tested (this fork)** | env table + plugin cache + runtime resolver patch |
+| `26.1029.7803.0` | `26.1029.61003` | `9c26d707817e90a7` | **Tested (this fork, 2026-11-04)** | env table + plugin cache + runtime resolver patch |
+| `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | Tested (earlier fork build) | env table + plugin cache + runtime resolver patch |
 | `26.915.4065.0` | `26.915.31945` | — | Tested by upstream | env table + plugin cache |
 | other `26.1013.x` builds | any | any | Expected; verify with `status` | runtime hash directory is globbed |
 | older / unknown | any | any | Unverified | run `status`; do not patch blindly |
@@ -198,6 +200,7 @@ the model's wording.
 |---|---|---|---|
 | `site_status_blocked` — “The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted.” | cloud `aura/site_status` check in `browser-service.mjs` | **Yes** — env flag + resolver default | restart Codex, open a **new** thread; `status` must show `config ok True` |
 | `site_status_unavailable` — “The site-safety check was unavailable.” | same gate, network/5xx | n/a | transient; retry and check your proxy |
+| `upstream_error` — “The encrypted content for item `cmp_…` could not be verified. Reason: Encrypted content could not be decrypted or parsed.” | model provider / gateway, **not Browser Use** | n/a | the thread was created under a different auth context (e.g. ChatGPT auth → API-key gateway); start a **new** thread |
 | `browser_navigation_blocked` — “Browser Use is not permitted on `<url>`.” | CDP `Page.navigationBlocked` | **Yes** — guard inserted into the service copies | re-run `.\install.ps1 install --persist`; new thread |
 | `navigation_url_policy_blocked` — “The browser URL policy blocks this action.” | local URL policy | Partly — the flag also bypasses `check-navigation-url-policy` | confirm the flag reached that process (see Diagnostics) |
 | `blockedURL` (`-10015`) / “Computer Use is not allowed on the current browser URL” | Computer Use native helper | **No** — macOS only | not covered; see `README.computer-use.md` |

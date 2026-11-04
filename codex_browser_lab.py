@@ -98,7 +98,7 @@ NAV_BLOCK_GUARD = (
 # security-mode resolver fall back to local-testing instead of "" so those
 # processes bypass site_status too.
 FT_DEFAULT_RE = re.compile(
-    r"(function \w+\(\w+\)\{let \w+=Nt\(\w+,\w+\);return \w+\.find\(r=>r===\w+\)\?\?)\w+\}"
+    r"(function \w+\(\w+\)\{let \w+=\w+\(\w+,\w+\);return \w+\.find\(r=>r===\w+\)\?\?)\w+\}"
 )
 FT_DEFAULT_VALUE = "disabled-for-local-testing"
 
