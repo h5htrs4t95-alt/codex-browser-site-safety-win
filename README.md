@@ -2,11 +2,11 @@
 
 Windows fork of [bypass-codex-site-safety](https://github.com/leixyou/bypass-codex-site-safety).
 
-[English](README.md) · [中文](README.zh.md) · [Windows guide](README.windows.md) · [Windows 中文](README.windows.zh.md) · [Computer Use](README.computer-use.md)
+[English](README.md) · [中文](README.zh.md) · [Windows guide](README.windows.md) · [Windows 中文](README.windows.zh.md) · [Computer Use](README.computer-use.md) · [Changelog](CHANGELOG.md)
 
 > **Windows fork — extra runtime patch.** Upstream's Windows port only patched the plugin cache. On Codex Desktop `26.1013.x`, some `node_repl` processes are spawned by plugin helpers (`node.exe ./server.mjs`, `cua-repl.mjs`) and **never inherit** `[mcp_servers.node_repl.env]`; they load `browser-service.mjs` from the `cua_node` runtime, so the env flag never reaches the site-status gate. This fork patches those runtime copies too. Details: [README.windows.md → Fork additions](README.windows.md#fork-additions-runtime-browser-service-copies).
 >
-> Tested on Codex Desktop `26.1013.4894.0` (Windows 11), runtime `78fb63cda1a9e2b2`, plugin `26.1013.40934`.
+> Tested on Codex Desktop `26.1103.4239.0` (Windows 11), runtime `db1cc9e06a6c48d6`, plugin `26.1103.32239`. Older builds and what they need: [compatibility matrix](README.windows.md#compatibility-matrix).
 
 ### Windows quick start
 

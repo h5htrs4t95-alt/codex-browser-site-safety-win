@@ -2,11 +2,11 @@
 
 [bypass-codex-site-safety](https://github.com/leixyou/bypass-codex-site-safety) 的 Windows fork。
 
-[English](README.md) · [中文](README.zh.md) · [Windows 指南](README.windows.md) · [Windows 中文](README.windows.zh.md) · [Computer Use](README.computer-use.md)
+[English](README.md) · [中文](README.zh.md) · [Windows 指南](README.windows.md) · [Windows 中文](README.windows.zh.md) · [Computer Use](README.computer-use.md) · [更新日志](CHANGELOG.md)
 
 > **Windows fork 额外补丁。** 上游的 Windows 版只改了插件缓存。Codex Desktop `26.1013.x` 上，有一部分 `node_repl` 由插件服务（`node.exe ./server.mjs`、`cua-repl.mjs`）拉起，**不继承** `[mcp_servers.node_repl.env]`；它们加载的是 `cua_node` 运行时里的 `browser-service.mjs`，环境变量到不了 site-status 闸门。本 fork 把这些运行时副本也一起改了。完整说明见 [中文 Windows 指南](README.windows.zh.md)。
 >
-> 实测环境：Codex Desktop `26.1013.4894.0`（Windows 11），runtime `78fb63cda1a9e2b2`，plugin `26.1013.40934`。
+> 实测环境：Codex Desktop `26.1103.4239.0`（Windows 11），runtime `db1cc9e06a6c48d6`，plugin `26.1103.32239`。历史版本及各自需要什么：见[版本兼容矩阵](README.windows.zh.md#版本兼容矩阵)。
 
 ### Windows 快速开始
 
