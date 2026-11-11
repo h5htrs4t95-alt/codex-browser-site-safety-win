@@ -34,7 +34,7 @@ watcher（`--persist`）和 `CodexBrowserLabRepair` 计划任务会在 Codex 重
 | Codex / ChatGPT Desktop | 已安装并至少启动过一次，确保 `%USERPROFILE%\.codex\config.toml` 存在 |
 | Python | 3.9+（`python`、`python3` 或 `py` 启动器在 PATH 中） |
 
-实测版本：Codex Desktop `26.1029.7803.0` / plugin `26.1029.61003`（本 fork，2026-11-04）、`26.1013.4894.0` / plugin `26.1013.40934`（本 fork，2026-10-21），以及 `26.915.4065.0` / plugin `26.915.31945`（上游）。
+实测版本：Codex Desktop `26.1103.4239.0` / plugin `26.1103.32239`（本 fork，2026-11-11）、`26.1029.7803.0` / plugin `26.1029.61003`（本 fork，2026-11-04）、`26.1013.4894.0` / plugin `26.1013.40934`（本 fork，2026-10-21），以及 `26.915.4065.0` / plugin `26.915.31945`（上游）。
 
 ## 版本兼容矩阵
 
@@ -42,7 +42,8 @@ watcher（`--persist`）和 `CodexBrowserLabRepair` 计划任务会在 Codex 重
 
 | Codex Desktop（包版本） | Plugin | cua_node runtime | 状态 | 需要什么 |
 |---|---|---|---|---|
-| `26.1029.7803.0` | `26.1029.61003` | `9c26d707817e90a7` | **本 fork 实测（2026-11-04）** | env 表 + 插件缓存 + 运行时 resolver 补丁 |
+| `26.1103.4239.0` | `26.1103.32239` | `db1cc9e06a6c48d6` | **本 fork 实测（2026-11-11）** | env 表 + 插件缓存 + 运行时 resolver 补丁 |
+| `26.1029.7803.0` | `26.1029.61003` | `9c26d707817e90a7` | 早期 fork 实测 | env 表 + 插件缓存 + 运行时 resolver 补丁 |
 | `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | 早期 fork 实测 | env 表 + 插件缓存 + 运行时 resolver 补丁 |
 | `26.915.4065.0` | `26.915.31945` | — | 上游实测 | env 表 + 插件缓存 |
 | 其他 `26.1013.x` | 任意 | 任意 | 预期可用，需 `status` 验证 | runtime hash 目录按通配匹配 |

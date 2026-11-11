@@ -46,9 +46,10 @@ a `browser-service.mjs.bak-ftmode-<timestamp>` next to the original.
 | Codex / ChatGPT Desktop | installed and run once, so `%USERPROFILE%\.codex\config.toml` exists |
 | Python | 3.9+ (`python`, `python3` or the `py` launcher on PATH) |
 
-Verified on Codex Desktop `26.1029.7803.0` / plugin `26.1029.61003` (this fork,
-2026-11-04), `26.1013.4894.0` / plugin `26.1013.40934` (this fork, 2026-10-21)
-and `26.915.4065.0` / plugin `26.915.31945` (upstream).
+Verified on Codex Desktop `26.1103.4239.0` / plugin `26.1103.32239` (this fork,
+2026-11-11), `26.1029.7803.0` / plugin `26.1029.61003` (this fork, 2026-11-04),
+`26.1013.4894.0` / plugin `26.1013.40934` (this fork, 2026-10-21) and
+`26.915.4065.0` / plugin `26.915.31945` (upstream).
 
 ## Compatibility matrix
 
@@ -58,7 +59,8 @@ contains the flag.
 
 | Codex Desktop (package) | Plugin | cua_node runtime | Status | What it needs |
 |---|---|---|---|---|
-| `26.1029.7803.0` | `26.1029.61003` | `9c26d707817e90a7` | **Tested (this fork, 2026-11-04)** | env table + plugin cache + runtime resolver patch |
+| `26.1103.4239.0` | `26.1103.32239` | `db1cc9e06a6c48d6` | **Tested (this fork, 2026-11-11)** | env table + plugin cache + runtime resolver patch |
+| `26.1029.7803.0` | `26.1029.61003` | `9c26d707817e90a7` | Tested (earlier fork build) | env table + plugin cache + runtime resolver patch |
 | `26.1013.4894.0` | `26.1013.40934` | `78fb63cda1a9e2b2` | Tested (earlier fork build) | env table + plugin cache + runtime resolver patch |
 | `26.915.4065.0` | `26.915.31945` | — | Tested by upstream | env table + plugin cache |
 | other `26.1013.x` builds | any | any | Expected; verify with `status` | runtime hash directory is globbed |
