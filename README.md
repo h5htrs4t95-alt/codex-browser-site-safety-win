@@ -19,6 +19,20 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
 Fully quit Codex (including the tray icon), reopen it, and use a **new thread**
 (old threads keep their already-spawned `node_repl`).
 
+### Before / after
+
+Before, a new thread trying to open any `http://` / `https://` site:
+
+```text
+Browser Use rejected this action due to browser security policy.
+Reason: The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted.
+```
+
+After `install --persist` and a new thread, the same browser action is allowed and
+the page content is returned. `.\install.ps1 status` shows
+`config security disabled-for-local-testing` and a live PID with
+`mode=disabled-for-local-testing`.
+
 The Windows guide is written as a reference:
 
 - [Compatibility matrix](README.windows.md#compatibility-matrix) — tested builds, how to read `status`

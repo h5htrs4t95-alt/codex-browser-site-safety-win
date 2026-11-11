@@ -18,6 +18,19 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 install --persist
 
 装完**完全退出 Codex（含托盘图标）再重开**，然后新开会话；老会话里已经拉起的 `node_repl` 仍是旧环境。
 
+### 前后对照
+
+安装前，新会话打开任意 `http://` / `https://` 站点：
+
+```text
+Browser Use rejected this action due to browser security policy.
+Reason: The site-safety policy blocks this action; no user permission prompt or Auto-review was attempted.
+```
+
+执行 `install --persist` 并新开会话后，同样的浏览器操作会被放行，页面内容正常返回。
+`.\install.ps1 status` 会显示 `config security disabled-for-local-testing`，并且有
+`live pid … mode=disabled-for-local-testing`。
+
 Windows 指南按"参考资料"来写：
 
 - [版本兼容矩阵](README.windows.zh.md#版本兼容矩阵) — 实测过的版本、怎么读 `status`
